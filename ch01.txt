@@ -1,0 +1,144 @@
+https://github.com/minusk-heo/BigData/tree/master/ch01
+
+
+color@ubuntu:~$ curl -XPOST http://localhost:9200/classes/class/1/ -d '
+{"title":"Algorithm", "professor":"john"}' -H 'Content-Type: application/json'
+color@ubuntu:~$ curl -XGET http://localhost:9200/classes/class/1/?pretty
+{
+  "_index" : "classes",
+  "_type" : "class",
+  "_id" : "1",
+  "_version" : 1,
+  "found" : true,
+  "_source" : {
+    "title" : "Algorithm",
+    "professor" : "john"
+  }
+}
+
+color@ubuntu:~/work$ cat oneclass.json
+{
+   "title" : "Machine Learning",
+   "Professor" : "color",
+   "major" : "compute",
+   "semester" : ["spring", "fall"],
+   "student_count" : 100,
+   "unit" : 3,
+   "rating" : 5
+}
+color@ubuntu:~/work$ curl -XPOST http://localhost:9200/classes/class/1/ -d @oneclass.json
+{"error":"Content-Type header [application/x-www-form-urlencoded] is not supported","status":406}
+
+color@ubuntu:~/work$ curl -XPOST http://localhost:9200/classes/class/1/ -d @oneclass.json -H 'Content-Type: application/json'
+{"_index":"classes","_type":"class","_id":"1","_version":2,"result":"updated","_shards":{"total":2,"successful":1,"failed":0},"_seq_no":1,"_primary_term":1}
+
+color@ubuntu:~/work$ curl -XGET http://localhost:9200/classes/class/1/?pretty
+{
+  "_index" : "classes",
+  "_type" : "class",
+  "_id" : "1",
+  "_version" : 2,
+  "found" : true,
+  "_source" : {
+    "title" : "Machine Learning",
+    "Professor" : "color",
+    "major" : "compute",
+    "semester" : [
+      "spring",
+      "fall"
+    ],
+    "student_count" : 100,
+    "unit" : 3,
+    "rating" : 5
+  }
+}
+
+color@ubuntu:~/work$ curl -XPOST http://localhost:9200/classes/class/1/_update?pretty -d '
+{"doc": {"unit":1}}' -H 'Content-Type: application/json'
+{
+  "_index" : "classes",
+  "_type" : "class",
+  "_id" : "1",
+  "_version" : 4,
+  "result" : "updated",
+  "_shards" : {
+    "total" : 2,
+    "successful" : 1,
+    "failed" : 0
+  },
+  "_seq_no" : 3,
+  "_primary_term" : 1
+}
+
+color@ubuntu:~/work$ curl -XGET http://localhost:9200/classes/class/1?pretty
+{
+  "_index" : "classes",
+  "_type" : "class",
+  "_id" : "1",
+  "_version" : 4,
+  "found" : true,
+  "_source" : {
+    "title" : "algorithm",
+    "professor" : "john",
+    "unit" : 1
+  }
+}
+color@ubuntu:~/work$ curl -XPOST http://localhost:9200/classes/class/1/_update?pretty -d '
+{"doc": {"unit":2}}' -H 'Content-Type: application/json'
+{
+  "_index" : "classes",
+  "_type" : "class",
+  "_id" : "1",
+  "_version" : 5,
+  "result" : "updated",
+  "_shards" : {
+    "total" : 2,
+    "successful" : 1,
+    "failed" : 0
+  },
+  "_seq_no" : 4,
+  "_primary_term" : 1
+}
+color@ubuntu:~/work$ curl -XGET http://localhost:9200/classes/class/1?pretty
+{
+  "_index" : "classes",
+  "_type" : "class",
+  "_id" : "1",
+  "_version" : 5,
+  "found" : true,
+  "_source" : {
+    "title" : "algorithm",
+    "professor" : "john",
+    "unit" : 2
+  }
+}
+
+color@ubuntu:~/work$ curl -XPOST http://localhost:9200/classes/class/1/_update?pretty -d '
+{"script":"ctx._source.unit +=5"}' -H 'Content-Type: application/json'
+{
+  "_index" : "classes",
+  "_type" : "class",
+  "_id" : "1",
+  "_version" : 6,
+  "result" : "updated",
+  "_shards" : {
+    "total" : 2,
+    "successful" : 1,
+    "failed" : 0
+  },
+  "_seq_no" : 5,
+  "_primary_term" : 1
+}
+color@ubuntu:~/work$ curl -XGET http://localhost:9200/classes/class/1?pretty
+{
+  "_index" : "classes",
+  "_type" : "class",
+  "_id" : "1",
+  "_version" : 6,
+  "found" : true,
+  "_source" : {
+    "title" : "algorithm",
+    "professor" : "john",
+    "unit" : 7
+  }
+}

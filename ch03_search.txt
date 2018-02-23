@@ -1,0 +1,105 @@
+https://www.inflearn.com/course-status-2/
+
+color@ELK:~/work/BigData/ch03$ cat simple_basketball.json
+{ "index" : { "_index" : "basketball", "_type" : "record", "_id" : "1" } }
+{"team" : "Chicago Bulls","name" : "Michael Jordan", "points" : 30,"rebounds" : 3,"assists" : 4, "submit_date" : "1996-10-11"}
+{ "index" : { "_index" : "basketball", "_type" : "record", "_id" : "2" } }
+{"team" : "Chicago Bulls","name" : "Michael Jordan","points" : 20,"rebounds" : 5,"assists" : 8, "submit_date" : "1996-10-11"}
+
+color@ELK:~/work/BigData/ch03$ curl -XPUT 'localhost:9200/_bulk' --data-binary @simple_basketball.json
+{"error":"Content-Type header [application/x-www-form-urlencoded] is not supported","status":406}
+
+color@ELK:~/work/BigData/ch03$ curl -XPUT 'localhost:9200/_bulk' --data-binary @simple_basketball.json -H 'Content-Type:application/json'
+{"took":605,"errors":false,"items":[{"index":{"_index":"basketball","_type":"record","_id":"1","_version":1,"result":"created","_shards":{"total":2,"successful":1,"failed":0},"_seq_no":0,"_primary_term":1,"status":201}},{"index":{"_index":"basketball","_type":"record","_id":"2","_version":1,"result":"created","_shards":{"total":2,"successful":1,"failed":0},"_seq_no":0,"_primary_term":1,"status":201}}]}color@ELK:~/work/BigData/ch03$
+
+color@ELK:~/work/BigData/ch03$ curl -XGET localhost:9200/basketball/record/_search?pretty
+{
+  "took" : 683,
+  "timed_out" : false,
+  "_shards" : {
+    "total" : 5,
+    "successful" : 5,
+    "skipped" : 0,
+    "failed" : 0
+  },
+  "hits" : {
+    "total" : 2,
+    "max_score" : 1.0,
+    "hits" : [
+      {
+        "_index" : "basketball",
+        "_type" : "record",
+        "_id" : "2",
+        "_score" : 1.0,
+        "_source" : {
+          "team" : "Chicago Bulls",
+          "name" : "Michael Jordan",
+          "points" : 20,
+          "rebounds" : 5,
+          "assists" : 8,
+          "submit_date" : "1996-10-11"
+        }
+      },
+      {
+        "_index" : "basketball",
+        "_type" : "record",
+        "_id" : "1",
+        "_score" : 1.0,
+        "_source" : {
+          "team" : "Chicago Bulls",
+          "name" : "Michael Jordan",
+          "points" : 30,
+          "rebounds" : 3,
+          "assists" : 4,
+          "submit_date" : "1996-10-11"
+        }
+      }
+    ]
+  }
+}
+color@ELK:~/work/BigData/ch03$ curl -XGET localhost:9200/basketball/record/_search?q=points:30&pretty
+[1] 20604
+{"took":592,"timed_out":false,"_shards":{"total":5,"successful":5,"skipped":0,"failed":0},"hits":{"total":1,"max_score":1.0,"hits":[{"_index":"basketball","_type":"record","_id":"1","_score":1.0,"_source":{"team" : "Chicago Bulls","name" : "Michael Jordan", "points" : 30,"rebounds" : 3,"assists" : 4, "submit_date" : "1996-10-11"}}]}}No command 'pretty' found, did you mean:
+ Command 'xpretty' from package 'xmlbeans' (universe)
+pretty: command not found
+[1]+  Done                    curl -XGET localhost:9200/basketball/record/_search?q=points:30
+
+color@ELK:~/work/BigData/ch03$ curl -XGET 'localhost:9200/basketball/record/_search?q=points:30&pretty'
+{
+  "took" : 11,
+  "timed_out" : false,
+  "_shards" : {
+    "total" : 5,
+    "successful" : 5,
+    "skipped" : 0,
+    "failed" : 0
+  },
+  "hits" : {
+    "total" : 1,
+    "max_score" : 1.0,
+    "hits" : [
+      {
+        "_index" : "basketball",
+        "_type" : "record",
+        "_id" : "1",
+        "_score" : 1.0,
+        "_source" : {
+          "team" : "Chicago Bulls",
+          "name" : "Michael Jordan",
+          "points" : 30,
+          "rebounds" : 3,
+          "assists" : 4,
+          "submit_date" : "1996-10-11"
+        }
+      }
+    ]
+  }
+}
+
+color@ELK:~/work/BigData/ch03$ curl -XGET 'localhost:9200/basketball/record/_search' -d '
+{
+    "query" : {
+        "term": { "points": 30}
+    }
+}' -H 'Content-Type:application/json'
+{"took":4,"timed_out":false,"_shards":{"total":5,"successful":5,"skipped":0,"failed":0},"hits":{"total":1,"max_score":1.0,"hits":[{"_index":"basketball","_type":"record","_id":"1","_score":1.0,"_source":{"team" : "Chicago Bulls","name" : "Michael Jordan", "points" : 30,"rebounds" : 3,"assists" : 4, "submit_date" : "1996-10-11"}}]}}color@ELK:~/work/BigData/ch03$

@@ -1,0 +1,147 @@
+1. aggs하기 위한 도큐먼트들을 인덱스 basketball에 삽입하기 
+color@ELK:~/work/BigData/ch04$ curl -XPUT localhost:9200/basketball
+{"error":{"root_cause":[{"type":"resource_already_exists_exception","reason":"index [basketball/ZfysZmzHQvu3c-XRxsjjyg] already exists","index_uuid":"ZfysZmzHQvu3c-XRxsjjyg","index":"basketball"}],"type":"resource_already_exists_exception","reason":"index [basketball/ZfysZmzHQvu3c-XRxsjjyg] already exists","index_uuid":"ZfysZmzHQvu3c-XRxsjjyg","index":"basketball"},"status":400}
+color@ELK:~/work/BigData/ch04$ curl -XDELETE localhost:9200/basketball
+{"acknowledged":true}
+
+color@ELK:~/work/BigData/ch04$ curl -XPUT localhost:9200/basketball
+{"acknowledged":true,"shards_acknowledged":true,"index":"basketball"}
+color@ELK:~/work/BigData/ch04$
+
+
+2. 인덱스 안에 매핑 넣기
+color@ELK:~/work/BigData/ch04$ cat basketball_mapping.json
+{
+	"record" : {
+		"properties" : {
+			"team" : {
+				"type" : "string",
+				"fielddata" : true    <--- turn aggs 할때 이 필드로 조회할 수 있음. 
+			},
+			"name" : {
+				"type" : "string",
+				"fielddata" : true
+			},
+			"points" : {
+				"type" : "long"
+			},
+			"rebounds" : {
+				"type" : "long"
+			},
+			"assists" : {
+				"type" : "long"
+			},
+			"blocks" : {
+				"type" : "long"
+			},
+			"submit_date" : {
+				"type" : "date",
+				"format" : "yyyy-MM-dd"
+			}
+		}
+	}
+}color@ELK:~/work/BigData/ch04$
+color@ELK:~/work/BigData/ch04$ curl -XPUT localhost:9200/basketball/record/_mapping -d @basketball_mapping.json -H Content-Type:application/json
+{"error":{"root_cause":[{"type":"mapper_parsing_exception","reason":"No handler for type [string] declared on field [team]"}],"type":"mapper_parsing_exception","reason":"No handler for type [string] declared on field [team]"},"status":400}color@ELK:~/work/BigData/ch04$
+color@ELK:~/work/BigData/ch04$ vi basketball_mapping.json
+
+
+https://stackoverflow.com/questions/47452770/no-handler-for-type-string-declared-on-field-name
+color@ELK:~/work/BigData/ch04$ cat basketball_mapping.json
+{
+	"record" : {
+		"properties" : {
+			"team" : {
+				"type" : "text",    <--- string이 정의되어 있지 않다고 함. 구글링하니 text로 바꾸라고 함. 
+				"fielddata" : true
+			},
+			"name" : {
+				"type" : "text",
+				"fielddata" : true
+			},
+			"points" : {
+				"type" : "long"
+			},
+			"rebounds" : {
+				"type" : "long"
+			},
+			"assists" : {
+				"type" : "long"
+			},
+			"blocks" : {
+				"type" : "long"
+			},
+			"submit_date" : {
+				"type" : "date",
+				"format" : "yyyy-MM-dd"
+			}
+		}
+	}
+}
+color@ELK:~/work/BigData/ch04$ curl -XPUT localhost:9200/basketball/record/_mapping -d @basketball_mapping.json -H Content-Type:application/json
+{"acknowledged":true}
+color@ELK:~/work/BigData/ch04$
+
+3. 도큐먼트 4개 넣기
+
+color@ELK:~/work/BigData/ch04$ cat twoteam_basketball.json
+{ "index" : { "_index" : "basketball", "_type" : "record", "_id" : "1" } }
+{"team" : "Chicago","name" : "Michael Jordan", "points" : 30,"rebounds" : 3,"assists" : 4, "blocks" : 3, "submit_date" : "1996-10-11"}
+{ "index" : { "_index" : "basketball", "_type" : "record", "_id" : "2" } }
+{"team" : "Chicago","name" : "Michael Jordan","points" : 20,"rebounds" : 5,"assists" : 8, "blocks" : 4, "submit_date" : "1996-10-13"}
+{ "index" : { "_index" : "basketball", "_type" : "record", "_id" : "3" } }
+{"team" : "LA","name" : "Kobe Bryant","points" : 30,"rebounds" : 2,"assists" : 8, "blocks" : 5, "submit_date" : "2014-10-13"}
+{ "index" : { "_index" : "basketball", "_type" : "record", "_id" : "4" } }
+{"team" : "LA","name" : "Kobe Bryant","points" : 40,"rebounds" : 4,"assists" : 8, "blocks" : 6, "submit_date" : "2014-11-13"}
+
+color@ELK:~/work/BigData/ch04$ curl -XPOST localhost:9200/_bulk --data-binary @twoteam_basketball.json -H Content-Type:application/json
+{"took":308,"errors":false,"items":[{"index":{"_index":"basketball","_type":"record","_id":"1","_version":1,"result":"created","_shards":{"total":2,"successful":1,"failed":0},"_seq_no":0,"_primary_term":1,"status":201}},{"index":{"_index":"basketball","_type":"record","_id":"2","_version":1,"result":"created","_shards":{"total":2,"successful":1,"failed":0},"_seq_no":0,"_primary_term":1,"status":201}},{"index":{"_index":"basketball","_type":"record","_id":"3","_version":1,"result":"created","_shards":{"total":2,"successful":1,"failed":0},"_seq_no":0,"_primary_term":1,"status":201}},{"index":{"_index":"basketball","_type":"record","_id":"4","_version":1,"result":"created","_shards":{"total":2,"successful":1,"failed":0},"_seq_no":1,"_primary_term":1,"status":201}}]}color@ELK:~/work/BigData/ch04$
+
+4. terms aggregation
+
+olor@ELK:~/work/BigData/ch04$ cat terms_aggs.json
+{
+	"size" : 0,
+	"aggs" : {
+		"players" : {
+			"terms" : {
+				"field" : "team"
+			}
+		}
+	}
+}
+
+color@ELK:~/work/BigData/ch04$ curl -XGET localhost:9200/_search?pretty --data-binary @terms_aggs.json -H Content-Type:application/json
+{
+  "took" : 239,
+  "timed_out" : false,
+  "_shards" : {
+    "total" : 10,
+    "successful" : 10,
+    "skipped" : 0,
+    "failed" : 0
+  },
+  "hits" : {
+    "total" : 28,
+    "max_score" : 0.0,
+    "hits" : [ ]
+  },
+  "aggregations" : {
+    "players" : {
+      "doc_count_error_upper_bound" : 0,
+      "sum_other_doc_count" : 0,
+      "buckets" : [
+        {
+          "key" : "chicago",
+          "doc_count" : 2
+        },
+        {
+          "key" : "la",
+          "doc_count" : 2
+        }
+      ]
+    }
+  }
+}
+color@ELK:~/work/BigData/ch04$
+

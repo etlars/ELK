@@ -1,0 +1,149 @@
+color@ELK:~/work/BigData/ch03$ cat simple_basketball.json
+{ "index" : { "_index" : "basketball", "_type" : "record", "_id" : "1" } }
+{"team" : "Chicago Bulls","name" : "Michael Jordan", "points" : 30,"rebounds" : 3,"assists" : 4, "submit_date" : "1996-10-11"}
+{ "index" : { "_index" : "basketball", "_type" : "record", "_id" : "2" } }
+{"team" : "Chicago Bulls","name" : "Michael Jordan","points" : 20,"rebounds" : 5,"assists" : 8, "submit_date" : "1996-10-11"}
+
+color@ELK:~/work/BigData/ch03$ curl -XPUT 'localhost:9200/_bulk' --data-binary @simple_basketball.json -H 'Content-Type:application/jseon'
+{"error":"Content-Type header [application/jseon] is not supported","status":406}color@ELK:~/work/BigData/ch03$ curl -XPUT 'localhost:9200/_bulk' --data-binary @simple_basketball.json -H 'Content-Type:application/json'
+{"took":10,"errors":false,"items":[{"index":{"_index":"basketball","_type":"record","_id":"1","_version":3,"result":"updated","_shards":{"total":2,"successful":1,"failed":0},"_seq_no":2,"_primary_term":1,"status":200}},{"index":{"_index":"basketball","_type":"record","_id":"2","_version":3,"result":"updated","_shards":{"total":2,"successful":1,"failed":0},"_seq_no":2,"_primary_term":1,"status":200}}]}
+color@ELK:~/work/BigData/ch03$
+color@ELK:~/work/BigData/ch03$ cat avg_points_aggs.json
+{
+	"size" : 0,
+	"aggs" : {
+		"avg_score" : {
+			"avg" : {
+				"field" : "points"
+			}
+		}
+	}
+}
+color@ELK:~/work/BigData/ch03$
+color@ELK:~/work/BigData/ch03$ curl -XGET localhost:9200/_search?pretty --data-binary @avg_points_aggs.json
+{
+  "error" : "Content-Type header [application/x-www-form-urlencoded] is not supported",
+  "status" : 406
+}
+color@ELK:~/work/BigData/ch03$ curl -XGET localhost:9200/_search?pretty --data-binary @avg_points_aggs.json -H 'Content-Type:application/json'
+{
+  "took" : 205,
+  "timed_out" : false,
+  "_shards" : {
+    "total" : 10,
+    "successful" : 10,
+    "skipped" : 0,
+    "failed" : 0
+  },
+  "hits" : {
+    "total" : 26,
+    "max_score" : 0.0,
+    "hits" : [ ]
+  },
+  "aggregations" : {
+    "avg_score" : {
+      "value" : 25.0
+    }
+  }
+}
+color@ELK:~/work/BigData/ch03$
+color@ELK:~/work/BigData/ch03$ curl -XGET localhost:9200/_search?pretty --data-binary @avg_points_aggs.json -H 'Content-Type:application/json'
+{
+  "took" : 205,
+  "timed_out" : false,
+  "_shards" : {
+    "total" : 10,
+    "successful" : 10,
+    "skipped" : 0,
+    "failed" : 0
+  },
+  "hits" : {
+    "total" : 26,
+    "max_score" : 0.0,
+    "hits" : [ ]
+  },
+  "aggregations" : {
+    "avg_score" : {
+      "value" : 25.0
+    }
+  }
+}
+color@ELK:~/work/BigData/ch03$ cat max_points_aggs.json
+{
+	"size" : 0,
+	"aggs" : {
+		"max_score" : {
+			"max" : {
+				"field" : "points"
+			}
+		}
+	}
+}
+color@ELK:~/work/BigData/ch03$ curl -XGET localhost:9200/_search?pretty --data-binary @max_points_aggs.json
+{
+  "error" : "Content-Type header [application/x-www-form-urlencoded] is not supported",
+  "status" : 406
+}
+color@ELK:~/work/BigData/ch03$ curl -XGET localhost:9200/_search?pretty --data-binary @max_points_aggs.json -H 'Content-Type:application/json'
+{
+  "took" : 48,
+  "timed_out" : false,
+  "_shards" : {
+    "total" : 10,
+    "successful" : 10,
+    "skipped" : 0,
+    "failed" : 0
+  },
+  "hits" : {
+    "total" : 26,
+    "max_score" : 0.0,
+    "hits" : [ ]
+  },
+  "aggregations" : {
+    "max_score" : {
+      "value" : 30.0
+    }
+  }
+}
+
+color@ELK:~/work/BigData/ch03$ cat stats_points_aggs.json
+{
+	"size" : 0,
+	"aggs" : {
+		"stats_score" : {
+			"stats" : {
+				"field" : "points"
+			}
+		}
+	}
+}color@ELK:~/work/BigData/ch03$ curl -XGET localhost:9200/_search?pretty --data-binary @stats_points_aggs.json
+{
+  "error" : "Content-Type header [application/x-www-form-urlencoded] is not supported",
+  "status" : 406
+}
+color@ELK:~/work/BigData/ch03$ curl -XGET localhost:9200/_search?pretty --data-binary @stats_points_aggs.json -H 'Content-Type:application/json'
+{
+  "took" : 54,
+  "timed_out" : false,
+  "_shards" : {
+    "total" : 10,
+    "successful" : 10,
+    "skipped" : 0,
+    "failed" : 0
+  },
+  "hits" : {
+    "total" : 26,
+    "max_score" : 0.0,
+    "hits" : [ ]
+  },
+  "aggregations" : {
+    "stats_score" : {
+      "count" : 2,
+      "min" : 20.0,
+      "max" : 30.0,
+      "avg" : 25.0,
+      "sum" : 50.0
+    }
+  }
+}
+color@ELK:~/work/BigData/ch03$

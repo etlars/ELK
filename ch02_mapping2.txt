@@ -1,0 +1,534 @@
+color@ELK:~/work/BigData$ curl -XPUT http://localhost:9200/classes
+{"acknowledged":true,"shards_acknowledged":true,"index":"classes"}color@ELK:~/work/BigData$ curl -XGET http://localhost:9200/classes?pretty
+{
+  "classes" : {
+    "aliases" : { },
+    "mappings" : { },     // <--- 매핑 부분이 비어있다. SQL의 skima 역할
+    "settings" : {
+      "index" : {
+        "creation_date" : "1518000293701",
+        "number_of_shards" : "5",
+        "number_of_replicas" : "1",
+        "uuid" : "UaumtYtfRB2zwuSSNTuArg",
+        "version" : {
+          "created" : "6020099"
+        },
+        "provided_name" : "classes"
+      }
+    }
+  }
+}
+
+curl -XPUT 'http://localhost:9200/classes/class/_mapping' -d @classesRating_mapping.json -H 'Content-Type:application/json'
+{"error":{"root_cause":[{"type":"mapper_parsing_exception","reason":"No handler for type [string] declared on field [professor]"}],"type":"mapper_parsing_exception","reason":"No handler for type [string] declared on field [professor]"},"status":400}color@ELK:~/work/BigData/ch02$ vi classesRating_mapping.json
+
+string 타입을 text로 일괄 변경후 다시 시도
+
+curl -XPUT 'http://localhost:9200/classes/class/_mapping' -d @classesRating_mapping.json -H 'Content-Type:application/json'
+{"acknowledged":true}
+color@ELK:~/work/BigData/ch02$
+color@ELK:~/work/BigData/ch02$ curl -XGET http://localhost:9200/classes?pretty
+{
+  "classes" : {
+    "aliases" : { },
+    "mappings" : {
+      "class" : {
+        "properties" : {
+          "major" : {
+            "type" : "text"
+          },
+          "professor" : {
+            "type" : "text"
+          },
+          "rating" : {
+            "type" : "integer"
+          },
+          "school_location" : {
+            "type" : "geo_point"
+          },
+          "semester" : {
+            "type" : "text"
+          },
+          "student_count" : {
+            "type" : "integer"
+          },
+          "submit_date" : {
+            "type" : "date",
+            "format" : "yyyy-MM-dd"
+          },
+          "title" : {
+            "type" : "text"
+          },
+          "unit" : {
+            "type" : "integer"
+          }
+        }
+      }
+    },
+    "settings" : {
+      "index" : {
+        "creation_date" : "1518000293701",
+        "number_of_shards" : "5",
+        "number_of_replicas" : "1",
+        "uuid" : "UaumtYtfRB2zwuSSNTuArg",
+        "version" : {
+          "created" : "6020099"
+        },
+        "provided_name" : "classes"
+      }
+    }
+  }
+}
+
+
+_bulk로 한꺼번에 데이터 집어넣기
+
+color@ELK:~/work/BigData/ch02$ curl -XPOST http://localhost:9200/_bulk?pretty --data-binary @classes.json
+{
+  "error" : "Content-Type header [application/x-www-form-urlencoded] is not supported",
+  "status" : 406
+}
+color@ELK:~/work/BigData/ch02$ curl -XPOST http://localhost:9200/_bulk?pretty --data-binary @classes.json -H 'Content-Type:application/json'
+{
+  "took" : 192,
+  "errors" : false,
+  "items" : [
+    {
+      "index" : {
+        "_index" : "classes",
+        "_type" : "class",
+        "_id" : "1",
+        "_version" : 1,
+        "result" : "created",
+        "_shards" : {
+          "total" : 2,
+          "successful" : 1,
+          "failed" : 0
+        },
+        "_seq_no" : 0,
+        "_primary_term" : 1,
+        "status" : 201
+      }
+    },
+    {
+      "index" : {
+        "_index" : "classes",
+        "_type" : "class",
+        "_id" : "2",
+        "_version" : 1,
+        "result" : "created",
+        "_shards" : {
+          "total" : 2,
+          "successful" : 1,
+          "failed" : 0
+        },
+        "_seq_no" : 0,
+        "_primary_term" : 1,
+        "status" : 201
+      }
+    },
+    {
+      "index" : {
+        "_index" : "classes",
+        "_type" : "class",
+        "_id" : "3",
+        "_version" : 1,
+        "result" : "created",
+        "_shards" : {
+          "total" : 2,
+          "successful" : 1,
+          "failed" : 0
+        },
+        "_seq_no" : 0,
+        "_primary_term" : 1,
+        "status" : 201
+      }
+    },
+    {
+      "index" : {
+        "_index" : "classes",
+        "_type" : "class",
+        "_id" : "5",
+        "_version" : 1,
+        "result" : "created",
+        "_shards" : {
+          "total" : 2,
+          "successful" : 1,
+          "failed" : 0
+        },
+        "_seq_no" : 0,
+        "_primary_term" : 1,
+        "status" : 201
+      }
+    },
+    {
+      "index" : {
+        "_index" : "classes",
+        "_type" : "class",
+        "_id" : "6",
+        "_version" : 1,
+        "result" : "created",
+        "_shards" : {
+          "total" : 2,
+          "successful" : 1,
+          "failed" : 0
+        },
+        "_seq_no" : 1,
+        "_primary_term" : 1,
+        "status" : 201
+      }
+    },
+    {
+      "index" : {
+        "_index" : "classes",
+        "_type" : "class",
+        "_id" : "7",
+        "_version" : 1,
+        "result" : "created",
+        "_shards" : {
+          "total" : 2,
+          "successful" : 1,
+          "failed" : 0
+        },
+        "_seq_no" : 1,
+        "_primary_term" : 1,
+        "status" : 201
+      }
+    },
+    {
+      "index" : {
+        "_index" : "classes",
+        "_type" : "class",
+        "_id" : "8",
+        "_version" : 1,
+        "result" : "created",
+        "_shards" : {
+          "total" : 2,
+          "successful" : 1,
+          "failed" : 0
+        },
+        "_seq_no" : 1,
+        "_primary_term" : 1,
+        "status" : 201
+      }
+    },
+    {
+      "index" : {
+        "_index" : "classes",
+        "_type" : "class",
+        "_id" : "9",
+        "_version" : 1,
+        "result" : "created",
+        "_shards" : {
+          "total" : 2,
+          "successful" : 1,
+          "failed" : 0
+        },
+        "_seq_no" : 2,
+        "_primary_term" : 1,
+        "status" : 201
+      }
+    },
+    {
+      "index" : {
+        "_index" : "classes",
+        "_type" : "class",
+        "_id" : "10",
+        "_version" : 1,
+        "result" : "created",
+        "_shards" : {
+          "total" : 2,
+          "successful" : 1,
+          "failed" : 0
+        },
+        "_seq_no" : 3,
+        "_primary_term" : 1,
+        "status" : 201
+      }
+    },
+    {
+      "index" : {
+        "_index" : "classes",
+        "_type" : "class",
+        "_id" : "11",
+        "_version" : 1,
+        "result" : "created",
+        "_shards" : {
+          "total" : 2,
+          "successful" : 1,
+          "failed" : 0
+        },
+        "_seq_no" : 1,
+        "_primary_term" : 1,
+        "status" : 201
+      }
+    },
+    {
+      "index" : {
+        "_index" : "classes",
+        "_type" : "class",
+        "_id" : "12",
+        "_version" : 1,
+        "result" : "created",
+        "_shards" : {
+          "total" : 2,
+          "successful" : 1,
+          "failed" : 0
+        },
+        "_seq_no" : 4,
+        "_primary_term" : 1,
+        "status" : 201
+      }
+    },
+    {
+      "index" : {
+        "_index" : "classes",
+        "_type" : "class",
+        "_id" : "13",
+        "_version" : 1,
+        "result" : "created",
+        "_shards" : {
+          "total" : 2,
+          "successful" : 1,
+          "failed" : 0
+        },
+        "_seq_no" : 2,
+        "_primary_term" : 1,
+        "status" : 201
+      }
+    },
+    {
+      "index" : {
+        "_index" : "classes",
+        "_type" : "class",
+        "_id" : "14",
+        "_version" : 1,
+        "result" : "created",
+        "_shards" : {
+          "total" : 2,
+          "successful" : 1,
+          "failed" : 0
+        },
+        "_seq_no" : 0,
+        "_primary_term" : 1,
+        "status" : 201
+      }
+    },
+    {
+      "index" : {
+        "_index" : "classes",
+        "_type" : "class",
+        "_id" : "15",
+        "_version" : 1,
+        "result" : "created",
+        "_shards" : {
+          "total" : 2,
+          "successful" : 1,
+          "failed" : 0
+        },
+        "_seq_no" : 2,
+        "_primary_term" : 1,
+        "status" : 201
+      }
+    },
+    {
+      "index" : {
+        "_index" : "classes",
+        "_type" : "class",
+        "_id" : "16",
+        "_version" : 1,
+        "result" : "created",
+        "_shards" : {
+          "total" : 2,
+          "successful" : 1,
+          "failed" : 0
+        },
+        "_seq_no" : 3,
+        "_primary_term" : 1,
+        "status" : 201
+      }
+    },
+    {
+      "index" : {
+        "_index" : "classes",
+        "_type" : "class",
+        "_id" : "17",
+        "_version" : 1,
+        "result" : "created",
+        "_shards" : {
+          "total" : 2,
+          "successful" : 1,
+          "failed" : 0
+        },
+        "_seq_no" : 2,
+        "_primary_term" : 1,
+        "status" : 201
+      }
+    },
+    {
+      "index" : {
+        "_index" : "classes",
+        "_type" : "class",
+        "_id" : "18",
+        "_version" : 1,
+        "result" : "created",
+        "_shards" : {
+          "total" : 2,
+          "successful" : 1,
+          "failed" : 0
+        },
+        "_seq_no" : 4,
+        "_primary_term" : 1,
+        "status" : 201
+      }
+    },
+    {
+      "index" : {
+        "_index" : "classes",
+        "_type" : "class",
+        "_id" : "19",
+        "_version" : 1,
+        "result" : "created",
+        "_shards" : {
+          "total" : 2,
+          "successful" : 1,
+          "failed" : 0
+        },
+        "_seq_no" : 1,
+        "_primary_term" : 1,
+        "status" : 201
+      }
+    },
+    {
+      "index" : {
+        "_index" : "classes",
+        "_type" : "class",
+        "_id" : "20",
+        "_version" : 1,
+        "result" : "created",
+        "_shards" : {
+          "total" : 2,
+          "successful" : 1,
+          "failed" : 0
+        },
+        "_seq_no" : 3,
+        "_primary_term" : 1,
+        "status" : 201
+      }
+    },
+    {
+      "index" : {
+        "_index" : "classes",
+        "_type" : "class",
+        "_id" : "21",
+        "_version" : 1,
+        "result" : "created",
+        "_shards" : {
+          "total" : 2,
+          "successful" : 1,
+          "failed" : 0
+        },
+        "_seq_no" : 5,
+        "_primary_term" : 1,
+        "status" : 201
+      }
+    },
+    {
+      "index" : {
+        "_index" : "classes",
+        "_type" : "class",
+        "_id" : "22",
+        "_version" : 1,
+        "result" : "created",
+        "_shards" : {
+          "total" : 2,
+          "successful" : 1,
+          "failed" : 0
+        },
+        "_seq_no" : 2,
+        "_primary_term" : 1,
+        "status" : 201
+      }
+    },
+    {
+      "index" : {
+        "_index" : "classes",
+        "_type" : "class",
+        "_id" : "23",
+        "_version" : 1,
+        "result" : "created",
+        "_shards" : {
+          "total" : 2,
+          "successful" : 1,
+          "failed" : 0
+        },
+        "_seq_no" : 3,
+        "_primary_term" : 1,
+        "status" : 201
+      }
+    },
+    {
+      "index" : {
+        "_index" : "classes",
+        "_type" : "class",
+        "_id" : "24",
+        "_version" : 1,
+        "result" : "created",
+        "_shards" : {
+          "total" : 2,
+          "successful" : 1,
+          "failed" : 0
+        },
+        "_seq_no" : 3,
+        "_primary_term" : 1,
+        "status" : 201
+      }
+    },
+    {
+      "index" : {
+        "_index" : "classes",
+        "_type" : "class",
+        "_id" : "25",
+        "_version" : 1,
+        "result" : "created",
+        "_shards" : {
+          "total" : 2,
+          "successful" : 1,
+          "failed" : 0
+        },
+        "_seq_no" : 4,
+        "_primary_term" : 1,
+        "status" : 201
+      }
+    }
+  ]
+}
+
+
+
+검증하기
+color@ELK:~/work/BigData/ch02$ curl -XGET http://localhost:9200/classes/class/1/?pretty
+{
+  "_index" : "classes",
+  "_type" : "class",
+  "_id" : "1",
+  "_version" : 1,
+  "found" : true,
+  "_source" : {
+    "title" : "Machine Learning",
+    "Professor" : "Minsuk Heo",
+    "major" : "Computer Science",
+    "semester" : [
+      "spring",
+      "fall"
+    ],
+    "student_count" : 100,
+    "unit" : 3,
+    "rating" : 5,
+    "submit_date" : "2016-01-02",
+    "school_location" : {
+      "lat" : 36.0,
+      "lon" : -120.0
+    }
+  }
+}
